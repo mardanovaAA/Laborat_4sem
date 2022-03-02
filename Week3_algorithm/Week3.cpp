@@ -1,111 +1,142 @@
 #include <iostream>
 #include <vector>
-#include <iterator>
 #include <algorithm>
 #include <numeric>
 #include <random>
-#include <chrono>
-#include <deque>
+#include <iterator>
 
-template <typename A>
-std::ostream& operator<< (std::ostream& out, const std::vector<A>& container){
-	out << "[";
-	std::copy(std::begin(container), std::prev(std::end(container)), std::ostream_iterator<A>(out, ", "));
-	out << *std::prev(std::end(container)) << "]\n";
+std::ostream& operator<<(std::ostream& out, std::vector<int> vec){
+	std::copy(std::begin(vec), std::end(vec), std::ostream_iterator<int>(out, " "));
 	return out;
 }
-
-template <typename A>
-std::ostream& operator<< (std::ostream& out, const std::deque<A>& container){
-	out << "[";
-	std::copy(std::begin(container), std::prev(std::end(container)), std::ostream_iterator<A>(out, ", "));
-	out << *std::prev(std::end(container)) << "]\n";
-	return out;
-}
-
-#define RANGE(container) std::begin(container), std::end(container)
-
 
 int main(){
-	// std::vector<int> source {42, 33, 255, -54};
-	// std::vector<int> dest;
 
-	// std::copy(std::begin(source), std::end(source), std::back_inserter(dest));
+	std::vector<int> sequence_1 (10);
+
+	//Creating sequence 1 of numbers from 1 to 10;
+	std::iota(std::begin(sequence_1), std::end(sequence_1), 1);
+
+
+	//Add some numbers to the end of sequence_1 from cin;
+	std::cout << "How many numbers do you want to enter?\n";
+
+	{
+		int N;
+		std::cin >> N;
+		for (int i = 0; i != N; i++){
+			int number;
+			std::cin >> number;
+			sequence_1.push_back(number);
+		}
+	}
+
 	
-	// std::copy(std::begin(dest), std::end(dest), std::ostream_iterator<int>(std::cout, " "));
-	// std::cout << std::endl;
+	//Mix elements of sequence_1 randomly;	
+	std::random_device rd;
+	std::mt19937 gen(rd());
 
-	// auto gcd = std::gcd(45, 25);
-	// auto lcm = std::lcm(45, 25);
+	std::shuffle(std::begin(sequence_1), std::end(sequence_1), gen);
 
-	// std::cout << gcd << std::endl;
-	// std::cout << lcm << std::endl;
 
-	// std::cout << std::boolalpha << (gcd * lcm == 45 * 25) << std::endl;
+	//Delete duplicates from sequence_1;
+	std::sort(std::begin(sequence_1), std::end(sequence_1));
+	auto it = std::unique(std::begin(sequence_1), std::end(sequence_1));
+	sequence_1.erase(it, std::end(sequence_1));
 
-	// std::vector<int> sequence (10);
-	// std::iota(std::begin(sequence), std::end(sequence), 12);
-	// std::cout << sequence;
+	//Count the number of odd numbers in sequence_1;
+	int odd_number = std::count_if(std::begin(sequence_1), std::end(sequence_1), [](int num){return (num % 2 == 1);});
+	std::cout << "The number of odd elements: " << odd_number << std::endl;
 
-	// auto sum = std::accumulate(std::begin(sequence), std::end(sequence), 0);
-	// auto product = std::accumulate(std::begin(sequence), std::end(sequence), 1, [](auto lhs, auto rhs){ return lhs * rhs;});
-	// std::cout << "Sum: " << sum << std::endl;
-	// std::cout << "Product: " << product << std::endl;
+	//Determine the minimum and maximum values in sequence_1;
+	auto min_elem_iter = std::min_element(std::begin(sequence_1), std::end(sequence_1));
+	auto max_elem_iter = std::max_element(std::begin(sequence_1), std::end(sequence_1));
+	std::cout << "Max element is " << *max_elem_iter << "\nMin element is " << *min_elem_iter << std::endl;
 
-	// std::vector<int> reversed_sequence;
-	// std::reverse_copy(std::begin(sequence), std::end(sequence), std::back_inserter(reversed_sequence));
+	//Find at least one prime number in sequence_1;
+	auto is_prime = [](int number){
+		bool flag = true;
+		for (int i = 2; i <= (int)(sqrt(number)); i++){
+			if (number % i == 0) flag = false;
+		}
+		return (number > 1) ? flag : false;
+	};
+	auto prime_number = std::find_if(std::begin(sequence_1), std::end(sequence_1), is_prime);
+	if (prime_number != std::end(sequence_1)){
+		std::cout << "One prime number from sequence_1: " << *prime_number << std::endl;
+	} else {
+		std::cout << "No prime numbers\n";
+	}
 
-	// auto inner_product = std::inner_product(std::begin(sequence), std::end(sequence), std::begin(reversed_sequence), 0);
+	//Replace all the numbers in sequnce_1 with their squares;
+	std::transform(std::begin(sequence_1), std::end(sequence_1), std::begin(sequence_1), [](int number){return number*number;});
 
-	// std::cout << reversed_sequence;
-	// std::cout << inner_product << std::endl;
+	//Create a sequence_2 of (size(sequence_1)) random numbers;
+	std::uniform_int_distribution<> distribution (1, 150);
+	std::vector<int> sequence_2;
+	std::generate_n(std::back_inserter(sequence_2), sequence_1.size(), [&distribution, &gen](){return distribution(gen);});
 
-	// std::reverse(std::begin(reversed_sequence), std::end(reversed_sequence));
-	// std::cout << "sequence reversed reversed " << reversed_sequence;
+	//Calculate the sum of the numbers in sequence_2;
+	int sum = std::accumulate(std::begin(sequence_2), std::end(sequence_2), 0);
+	std::cout << "The sum of sequence_2 is " << sum << std::endl;
 
-	// std::vector<int> transformed;
-	// std::transform(std::begin(sequence), std::end(sequence), std::back_inserter(transformed), [](auto el){return el*el;});
-	// std::cout << "The square is " << transformed;
+	//Replace the first 3 numbers in sequence_2 with the 1;
+	std::fill_n(std::begin(sequence_2), 3, 1);
 
-	// std::vector<int> products;
+	//Create a sequence_3 as the difference between sequence_1 and sequence_2;
+	std::vector<int> sequence_3;
+	std::transform(std::begin(sequence_1), std::end(sequence_1), std::begin(sequence_2), std::back_inserter(sequence_3), 
+					[](int first, int second){return first - second;});
 
-	// std::transform(std::begin(sequence), std::end(sequence), std::begin(reversed_sequence), std::back_inserter(products), 
-	// 				[](auto lhs, auto rhs){return rhs * lhs;});
-	// std::cout << products;
+	for (auto i: sequence_3){
+		std::cout << i << " ";
+	}
+	std::cout << std::endl;
 
-	// auto seed = std::chrono::steady_clock::now().time_since_epoch().count();
-	// // auto generator = std::default_random_engine(seed);
-	// auto generator = std::mt19937(seed); //mersenne twister;
-	// auto distribution = std::uniform_int_distribution<int>(1, 10);
+	//Replace each negative element in the sequence_3 with 0;
+	std::transform(std::begin(sequence_3), std::end(sequence_3), std::begin(sequence_3), 
+					[](int number){return (number < 0)? 0 : number;});
 
-	// for (auto i = 0; i < 10; i++){
-	// 	std::cout << distribution(generator) << " ";
-	// }
-	// std::cout << std::endl;
+	//Delete all null elements from the sequence_3;
+	auto it_nulls = std::remove(std::begin(sequence_3), std::end(sequence_3), 0);
+	sequence_3.erase(it_nulls, std::end(sequence_3));
 
-	// std::deque<int> random_numbers;
-	// std::generate_n(std::front_inserter(random_numbers), 10, [&generator, &distribution](){return distribution(generator);});
-	// std::cout << random_numbers;
+	//Change the order of the elements in the sequence_3 to reverse;
+	std::reverse(sequence_3.begin(), sequence_3.end());
 
-	// auto nth_iter = std::next(std::begin(random_numbers), random_numbers.size() / 2);
-	// std::nth_element(std::begin(random_numbers), nth_iter, std::end(random_numbers));
+	//Determine the top 3 largest elements in the PP;
+	if (sequence_3.size() >= 1){
+		std::nth_element(sequence_3.begin(), std::prev(sequence_3.end()), sequence_3.end());
+		std::cout << "The greatest element is " << *std::prev(sequence_3.end()) << std::endl;
+		if (sequence_3.size() >= 2){
+			std::nth_element(sequence_3.begin(), std::prev(sequence_3.end(), 2), sequence_3.end());
+			std::cout << "The second greatest element is " << *std::prev(sequence_3.end(), 2) << std::endl;
+			if (sequence_3.size() >= 3){
+				std::nth_element(sequence_3.begin(), std::prev(sequence_3.end(), 3), sequence_3.end());
+				std::cout << "The third greatest element is " << *std::prev(sequence_3.end(), 3) << std::endl;
+			}
+		}
+	}
 
-	// std::cout << random_numbers;
+	//Sort sequence_1 and sequence_2;
+	std::sort(std::begin(sequence_1), std::end(sequence_1));
+	std::sort(std::begin(sequence_2), std::end(sequence_2));
 
-	// std::nth_element(std::begin(random_numbers), std::next(std::begin(random_numbers)), std::end(random_numbers), 
-	// 	[](auto lhs, auto rhs){return lhs > rhs;});
-	// std::cout << random_numbers;
+	//Create a sequence_4 as a merge of sequence_1 and sequence_2;
+	std::vector<int> sequence_4;
+	std::merge(std::begin(sequence_1), std::end(sequence_1), std::begin(sequence_2), std::end(sequence_2), std::back_inserter(sequence_4));
 
-	std::vector<int> same_numbers {1, 1, 3, 42, 1, 3, 5, 3, 1};
-	auto to_delete = std::unique(RANGE(same_numbers));
-	same_numbers.erase(to_delete, std::end(same_numbers));
-	std::cout << same_numbers << std::endl;
+	//Determine the range for the insertion of 1 in sequence_4;
+	auto pair_it = std::equal_range(sequence_4.begin(), sequence_4.end(), 1);
+	std::cout << "You can insert 1 to sequence_4 on the place from " <<
+		std::distance(std::begin(sequence_4), pair_it.first) << " to " << std::distance(std::begin(sequence_4), pair_it.second) << std::endl;
 
-	std::vector<int> copied;
-	std::copy_if(RANGE(same_numbers), std::back_inserter((copied)), [](auto elem){ return elem > 4;});
 
-	std::cout << copied;
+	//Output all sequences in cout;
+	std::cout << "sequence_1: " << sequence_1 << std::endl;
+	std::cout << "sequence_2: " << sequence_2 << std::endl;
+	std::cout << "sequence_3: " << sequence_3 << std::endl;
+	std::cout << "sequence_4: " << sequence_4 << std::endl;
 
 	return 0;
-
 }
